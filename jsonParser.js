@@ -32,12 +32,14 @@ function boolParser(input) {
 }
 
 function stringParser(input) {
-    regex = /^"([^"\\]|\\"|\\\\|\\\/|\\b|\\f|\\n|\\r|\\t|\\u[\dABCDEFabcdef]{4})*"/u
+    regex = /^"([^"\\])*"/u
     if (!regex.test(input)) {
         return null
     }
+    bffr=input.match(regex)[0]
+    strg=bffr.substring(1,bffr.length-1)
 
-    return [input.match(regex)[0], input.replace(regex, '')]
+    return [strg, input.replace(regex, '')]
 }
 
 
