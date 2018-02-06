@@ -1,4 +1,4 @@
-input = `${process.argv[2]}`
+let toParse = `${process.argv[2]}`
 
 function nullParser(input) {
     let regex = /^null/
@@ -37,7 +37,7 @@ function stringParser(input) {
 
     let bffr=input.match(regex)[0]
     let strg=bffr.replace(/\\\\/g,'\\')
-    strg=strg.replace(/\\\//g,'\/')
+    strg=strg.replace(/\\\//g,'/')
     strg=strg.replace(/\\b/g,'\b')
     strg=strg.replace(/\\f/g,'\f')
     strg=strg.replace(/\\n/g,'\n')
@@ -132,4 +132,4 @@ function arrayParser(input){
     return [arr,input]
 }
 
-console.log(valueParser(input))
+process.stdout.write(valueParser(toParse))
