@@ -1,7 +1,7 @@
 input = `${process.argv[2]}`
 
 function nullParser(input) {
-    regex = /^null/
+    let regex = /^null/
     if (!regex.test(input)) {
         return null
     }
@@ -10,7 +10,7 @@ function nullParser(input) {
 }
 
 function whiteSpaceParser(input) {
-    regex = /^\s+/
+    let regex = /^\s+/
     if (!regex.test(input)) {
         return null
     }
@@ -19,24 +19,24 @@ function whiteSpaceParser(input) {
 }
 
 function boolParser(input) {
-    regex = /^(true|false)/
+    let regex = /^(true|false)/
     if (!regex.test(input)) {
         return null
     }
 
-    bool = input.match(regex)[0] == 'true' ? true : false
+    let bool = input.match(regex)[0] == 'true' ? true : false
 
     return [bool, input.replace(regex, '')]
 }
 
 function stringParser(input) {
-    regex = /^"([^"\\]|\\"|\\\\|\\\/|\\b|\\f|\\n|\\r|\\t)*"/
+    let regex = /^"([^"\\]|\\"|\\\\|\\\/|\\b|\\f|\\n|\\r|\\t)*"/
     if (!regex.test(input)) {
         return null
     }
 
-    bffr=input.match(regex)[0]
-    strg=bffr.replace(/\\\\/g,'\\')
+    let bffr=input.match(regex)[0]
+    let strg=bffr.replace(/\\\\/g,'\\')
     strg=strg.replace(/\\\//g,'\/')
     strg=strg.replace(/\\b/g,'\b')
     strg=strg.replace(/\\f/g,'\f')
@@ -52,12 +52,12 @@ function stringParser(input) {
 
 
 function numberParser(input) {
-    regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
+    let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
     if (!regex.test(input)) {
         return null
     }
     
-    num = Number(input.match(regex)[0])
+    let num = Number(input.match(regex)[0])
 
     return [num, input.replace(regex, '')]
 }
@@ -72,7 +72,7 @@ function valueParser(input){
 }
 
 function commaParser(input){
-    regex = /^,/
+    let regex = /^,/
     if (!regex.test(input)) {
         return null
     }
@@ -81,7 +81,7 @@ function commaParser(input){
 }
 
 function openSquareParser(input){
-    regex = /^\[/
+    let regex = /^\[/
     if (!regex.test(input)) {
         return null
     }
@@ -90,7 +90,7 @@ function openSquareParser(input){
 }
 
 function closeSquareParser(input){
-    regex = /^\]/
+    let regex = /^\]/
     if (!regex.test(input)) {
         return null
     }
@@ -99,35 +99,37 @@ function closeSquareParser(input){
 }
 
 function arrayParser(input){
-    if(openSquareParser(input)){
-        let arr=[]
-        input=openSquareParser(input)[1]
+    let regex = /^\[.*\]/
+    if (!regex.test(input)) {
+        return null
+    }
 
-        while(!closeSquareParser(input)){
+    let arr=[]
+    input=openSquareParser(input)[1]
 
-            if(whiteSpaceParser(input)){
-                input=whiteSpaceParser(input)[1]
-            }
+    while(!closeSquareParser(input)){
 
-            if(valueParser(input)){
-                arr.push(valueParser(input)[0])
-                input=valueParser(input)[1]
-            }
-
-            if(whiteSpaceParser(input)){
-                input=whiteSpaceParser(input)[1]
-            }
-
-            if(commaParser(input)){
-                input=commaParser(input)[1]
-            }
+        if(whiteSpaceParser(input)){
+            input=whiteSpaceParser(input)[1]
         }
 
-        input=closeSquareParser(input)[1]
+        if(valueParser(input)){
+            arr.push(valueParser(input)[0])
+            input=valueParser(input)[1]
+        }
 
-        return [arr,input]
+        if(whiteSpaceParser(input)){
+            input=whiteSpaceParser(input)[1]
+        }
+
+        if(commaParser(input)){
+            input=commaParser(input)[1]
+        }
     }
-    return null
+
+    input=closeSquareParser(input)[1]
+
+    return [arr,input]
 }
 
-console.log(arrayParser(input))
+console.log(valueParser(input))
