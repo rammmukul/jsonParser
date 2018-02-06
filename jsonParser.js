@@ -1,14 +1,12 @@
 input = `${process.argv[2]}`
 
-console.log(stringParser(input))
-
 function nullParser(input) {
     regex = /^null/
     if (!regex.test(input)) {
         return null
     }
 
-    return [input.match(regex)[0], input.replace(regex, '')]
+    return [null, input.replace(regex, '')]
 }
 
 function whiteSpaceParser(input) {
@@ -65,8 +63,71 @@ function numberParser(input) {
 }
 
 function valueParser(input){
-    return nullParser(input) || 
-            boolParser(input)||
+
+    return boolParser(input)||
             stringParser(input)||
-            numberParser(input)
+            numberParser(input)||
+            arrayParser(input)||
+            nullParser(input)
 }
+
+function commaParser(input){
+    regex = /^,/
+    if (!regex.test(input)) {
+        return null
+    }
+    
+    return [input.match(regex)[0], input.replace(regex, '')]
+}
+
+function openSquareParser(input){
+    regex = /^\[/
+    if (!regex.test(input)) {
+        return null
+    }
+    
+    return [input.match(regex)[0], input.replace(regex, '')]
+}
+
+function closeSquareParser(input){
+    regex = /^\]/
+    if (!regex.test(input)) {
+        return null
+    }
+    
+    return [input.match(regex)[0], input.replace(regex, '')]
+}
+
+function arrayParser(input){
+    if(openSquareParser(input)){
+        let arr=[]
+        input=openSquareParser(input)[1]
+
+        while(!closeSquareParser(input)){
+
+            if(whiteSpaceParser(input)){
+                input=whiteSpaceParser(input)[1]
+            }
+
+            if(valueParser(input)){
+                arr.push(valueParser(input)[0])
+                input=valueParser(input)[1]
+            }
+
+            if(whiteSpaceParser(input)){
+                input=whiteSpaceParser(input)[1]
+            }
+
+            if(commaParser(input)){
+                input=commaParser(input)[1]
+            }
+        }
+
+        input=closeSquareParser(input)[1]
+
+        return [arr,input]
+    }
+    return null
+}
+
+console.log(arrayParser(input))
