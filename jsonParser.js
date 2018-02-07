@@ -132,4 +132,4 @@ function arrayParser(input){
     return [arr,input]
 }
 
-process.stdout.write(valueParser(toParse))
+console.log(valueParser(toParse))
