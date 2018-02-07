@@ -13,10 +13,6 @@ fs.readFile(file, 'utf-8', function read(error, str) {
 });
 
 function valueParser(input){
-    if(whiteSpaceParser(input)){
-        input=whiteSpaceParser(input)[1]
-    }
-
     return arrayParser(input)||
             objectParser(input)||
             boolParser(input)||
@@ -26,7 +22,7 @@ function valueParser(input){
 }
 
 function nullParser(input) {
-    if (input.substring(0,4)!='null') {
+    if (input.substring(0,4) != 'null') {
         return null
     }
 
@@ -62,7 +58,7 @@ function stringParser(input) {
         return null
     }
 
-    let strg=match[0].slice(1,-1)
+    let strg = match[0].slice(1,-1)
 
     return [strg, input.slice(match[0].length)]
 }
@@ -115,34 +111,34 @@ function arrayParser(isArray){
         return [match[0], input.slice(match[0].length)]
     }
 
-    let arr=[]
-    isArray=openSquareParser(isArray)[1]
+    let arr = []
+    isArray = openSquareParser(isArray)[1]
 
     while(!closeSquareParser(isArray)){
 
         if(whiteSpaceParser(isArray)){
-            isArray=whiteSpaceParser(isArray)[1]
+            isArray = whiteSpaceParser(isArray)[1]
         }
 
         if(valueParser(isArray)){
             arr.push(valueParser(isArray)[0])
-            isArray=valueParser(isArray)[1]
+            isArray = valueParser(isArray)[1]
         }
 
         if(whiteSpaceParser(isArray)){
-            isArray=whiteSpaceParser(isArray)[1]
+            isArray = whiteSpaceParser(isArray)[1]
         }
 
         if(commaParser(isArray)){
-            isArray=commaParser(isArray)[1]
+            isArray = commaParser(isArray)[1]
         }
         
         if(whiteSpaceParser(isArray)){
-            isArray=whiteSpaceParser(isArray)[1]
+            isArray = whiteSpaceParser(isArray)[1]
         }
     }
 
-    isArray=closeSquareParser(isArray)[1]
+    isArray = closeSquareParser(isArray)[1]
 
     return [arr,isArray]
 }
@@ -182,26 +178,26 @@ function objectParser(isObject){
         return [match[0], input.slice(match[0].length)]
     }
     
-    let obj={}
-    isObject=openCurlyParser(isObject)[1]
+    let obj = {}
+    isObject = openCurlyParser(isObject)[1]
 
     while(!closeCurlyParser(isObject)){
 
         if(whiteSpaceParser(isObject)){
-            isObject=whiteSpaceParser(isObject)[1]
+            isObject = whiteSpaceParser(isObject)[1]
         }
         
         let key = stringParser(isObject)[0]
         isObject = stringParser(isObject)[1]
 
         if(whiteSpaceParser(isObject)){
-            isObject=whiteSpaceParser(isObject)[1]
+            isObject = whiteSpaceParser(isObject)[1]
         }
 
-        isObject=colenParser(isObject)[1]
+        isObject = colenParser(isObject)[1]
 
         if(whiteSpaceParser(isObject)){
-            isObject=whiteSpaceParser(isObject)[1]
+            isObject = whiteSpaceParser(isObject)[1]
         }
 
         let value = ''
@@ -210,23 +206,23 @@ function objectParser(isObject){
             isObject = valueParser(isObject)[1]
         }
 
-        obj[key]=value
+        obj[key] = value
 
         if(whiteSpaceParser(isObject)){
-            isObject=whiteSpaceParser(isObject)[1]
+            isObject = whiteSpaceParser(isObject)[1]
         }
 
         if(commaParser(isObject)){
-            isObject=commaParser(isObject)[1]
+            isObject = commaParser(isObject)[1]
         }
 
         if(whiteSpaceParser(isObject)){
-            isObject=whiteSpaceParser(isObject)[1]
+            isObject = whiteSpaceParser(isObject)[1]
         }
     }
 
     if(closeCurlyParser(isObject)){
-        isObject=closeCurlyParser(isObject)[1]
+        isObject = closeCurlyParser(isObject)[1]
     }
 
     return [obj,isObject]

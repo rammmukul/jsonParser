@@ -1,2 +1,2 @@
 usage : 
-  `node jsonParser <string to parse>`
+  `node jsonParser <file to parse>`
