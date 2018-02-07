@@ -1,65 +1,65 @@
 let toParse = `${process.argv[2]}`
+console.log(valueParser(toParse))
 
 function nullParser(input) {
-    let regex = /^null/
-    if (!regex.test(input)) {
+    if (input.substring(0,4)!='null') {
         return null
     }
 
-    return [null, input.replace(regex, '')]
+    return [null, input.substring(4)]
 }
 
 function whiteSpaceParser(input) {
     let regex = /^\s+/
-    if (!regex.test(input)) {
+    let match = input.match(regex)
+    if (!match) {
         return null
     }
 
-    return [input.match(regex)[0], input.replace(regex, '')]
+    return [match[0], input.slice(match[0].length)]
 }
 
 function boolParser(input) {
     let regex = /^(true|false)/
-    if (!regex.test(input)) {
+    let match = input.match(regex)
+    if (!match) {
         return null
     }
 
-    let bool = input.match(regex)[0] == 'true' ? true : false
+    let bool = match[0] == 'true' ? true : false
 
-    return [bool, input.replace(regex, '')]
+    return [bool, input.slice(match[0].length)]
 }
 
 function stringParser(input) {
-    let regex = /^"([^"\\]|\\"|\\\\|\\\/|\\b|\\f|\\n|\\r|\\t)*"/
-    if (!regex.test(input)) {
+    let regex = /^"([^"\\]|\\")*"/
+    let match = input.match(regex)
+    if (!match) {
         return null
     }
 
-    let bffr=input.match(regex)[0]
-    let strg=bffr.replace(/\\\\/g,'\\')
-    strg=strg.replace(/\\\//g,'/')
-    strg=strg.replace(/\\b/g,'\b')
-    strg=strg.replace(/\\f/g,'\f')
-    strg=strg.replace(/\\n/g,'\n')
-    strg=strg.replace(/\\r/g,'\r')
-    strg=strg.replace(/\\t/g,'\t')
-    strg=strg.replace(/^"/g,'')
-    strg=strg.replace(/"$/g,'')
+    let bffr=match[0]
+    let strg=""
+    let prevEscape=false
+    for(let i=1; i<bffr.length && bffr[i]!='"' && !prevEscape; i++){
+        strg+=bffr[i]
+        prevEscape=bffr[i]=='\\'
+    }
 
-
-    return [strg, input.replace(regex, '')]
+    return [strg, input.slice(match[0].length)]
 }
 
 
 function numberParser(input) {
     let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
-    if (!regex.test(input)) {
+    let match = input.match(regex)
+    if (!match) {
         return null
     }
     
-    let num = Number(input.match(regex)[0])
+    let num = Number(match[0])
 
-    return [num, input.replace(regex, '')]
+    return [num, input.slice(match[0].length)]
 }
 
 function valueParser(input){
@@ -73,63 +73,64 @@ function valueParser(input){
 
 function commaParser(input){
     let regex = /^,/
-    if (!regex.test(input)) {
+    let match = input.match(regex)
+    if (!match) {
         return null
     }
     
-    return [input.match(regex)[0], input.replace(regex, '')]
+    return [match[0], input.slice(match[0].length)]
 }
 
-function openSquareParser(input){
-    let regex = /^\[/
-    if (!regex.test(input)) {
-        return null
-    }
-    
-    return [input.match(regex)[0], input.replace(regex, '')]
-}
-
-function closeSquareParser(input){
-    let regex = /^\]/
-    if (!regex.test(input)) {
-        return null
-    }
-    
-    return [input.match(regex)[0], input.replace(regex, '')]
-}
-
-function arrayParser(input){
+function arrayParser(isArray){
     let regex = /^\[.*\]/
-    if (!regex.test(input)) {
+    if (!regex.test(isArray)) {
         return null
+    }
+
+    function openSquareParser(input){
+        let openSquare = /^\[/
+        let match = input.match(openSquare)
+        if (!match) {
+            return null
+        }
+        
+        return [match[0], input.slice(match[0].length)]
+    }
+    
+    function closeSquareParser(input){
+        let closeSquare = /^\]/
+        let match = input.match(closeSquare)
+        if (!closeSquare.test(input)) {
+            return null
+        }
+        
+        return [match[0], input.slice(match[0].length)]
     }
 
     let arr=[]
-    input=openSquareParser(input)[1]
+    isArray=openSquareParser(isArray)[1]
 
-    while(!closeSquareParser(input)){
+    while(!closeSquareParser(isArray)){
 
-        if(whiteSpaceParser(input)){
-            input=whiteSpaceParser(input)[1]
+        if(whiteSpaceParser(isArray)){
+            isArray=whiteSpaceParser(isArray)[1]
         }
 
-        if(valueParser(input)){
-            arr.push(valueParser(input)[0])
-            input=valueParser(input)[1]
+        if(valueParser(isArray)){
+            arr.push(valueParser(isArray)[0])
+            isArray=valueParser(isArray)[1]
         }
 
-        if(whiteSpaceParser(input)){
-            input=whiteSpaceParser(input)[1]
+        if(whiteSpaceParser(isArray)){
+            isArray=whiteSpaceParser(isArray)[1]
         }
 
-        if(commaParser(input)){
-            input=commaParser(input)[1]
+        if(commaParser(isArray)){
+            isArray=commaParser(isArray)[1]
         }
     }
 
-    input=closeSquareParser(input)[1]
+    isArray=closeSquareParser(isArray)[1]
 
-    return [arr,input]
+    return [arr,isArray]
 }
-
-console.log(valueParser(toParse))
