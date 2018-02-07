@@ -1,14 +1,16 @@
-// let toParse = `${process.argv[2]}`
-// console.log(whiteSpaceParser(toParse))
 let fs = require('fs')
-let file = './twitter.json'
+let file = `${process.argv[2]}`
 fs.readFile(file, 'utf-8', function read(error, str) {
   if (error) throw error
-  console.log(str);
-  let result = JSON.stringify(valueParser(str))
+  console.log('String:', str);
+
+  console.log('\n\n\n');
+  console.log('*******************************************');
+  console.log('\n\n\n');
+  
+  let result = JSON.stringify(valueParser(str)[0], null, 2)
   console.log('\nFINAL RESULT : ', result);
 });
-
 
 function valueParser(input){
     if(whiteSpaceParser(input)){
@@ -60,13 +62,7 @@ function stringParser(input) {
         return null
     }
 
-    let bffr=match[0]
-    let strg=""
-    let prevEscape=false
-    for(let i=1; i<bffr.length && (bffr[i]!='"' || !prevEscape); i++){
-        strg += prevEscape ? '"' : bffr[i]
-        prevEscape=bffr[i]=='\\'
-    }
+    let strg=match[0].slice(1,-1)
 
     return [strg, input.slice(match[0].length)]
 }
@@ -95,8 +91,7 @@ function commaParser(input){
 }
 
 function arrayParser(isArray){
-    let regex = /^\[.*\]/
-    if (!regex.test(isArray)) {
+    if(!openSquareParser(isArray)){
         return null
     }
 
@@ -140,6 +135,10 @@ function arrayParser(isArray){
 
         if(commaParser(isArray)){
             isArray=commaParser(isArray)[1]
+        }
+        
+        if(whiteSpaceParser(isArray)){
+            isArray=whiteSpaceParser(isArray)[1]
         }
     }
 
@@ -219,9 +218,11 @@ function objectParser(isObject){
 
         if(commaParser(isObject)){
             isObject=commaParser(isObject)[1]
-            continue
         }
-        break
+
+        if(whiteSpaceParser(isObject)){
+            isObject=whiteSpaceParser(isObject)[1]
+        }
     }
 
     if(closeCurlyParser(isObject)){
