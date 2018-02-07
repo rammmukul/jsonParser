@@ -1,15 +1,18 @@
 let fs = require('fs')
 let file = `${process.argv[2]}`
-fs.readFile(file, 'utf-8', function read(error, str) {
-  if (error) throw error
-  console.log('String:', str);
+fs.readFile(file, 'utf-8', (error, str) => {
+    if (error){ 
+        throw error 
+    }
 
-  console.log('\n\n\n');
-  console.log('*******************************************');
-  console.log('\n\n\n');
-  
-  let result = JSON.stringify(valueParser(str)[0], null, 2)
-  console.log('\nFINAL RESULT : ', result);
+    console.log('String:\n', str);
+
+    console.log('\n\n\n');
+    console.log('*******************************************');
+    console.log('\n\n\n');
+
+    let result = JSON.stringify(valueParser(str)[0], null, 2)
+    console.log('\nFINAL RESULT :\n', result);
 });
 
 function valueParser(input){
