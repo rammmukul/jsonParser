@@ -1,232 +1,149 @@
 let fs = require('fs')
 let file = `${process.argv[2]}`
 fs.readFile(file, 'utf-8', (error, str) => {
-    if (error){ 
-        throw error 
-    }
+  if (error) {
+    throw error
+  }
+  console.log('String:\n', str)
+  console.log('\n\n\n')
+  console.log('*******************************************')
+  console.log('\n\n\n')
+  let result = JSON.stringify(valueParser(str)[0], null, 2)
+  console.log('\nFINAL RESULT :\n', result)
+})
 
-    console.log('String:\n', str);
-
-    console.log('\n\n\n');
-    console.log('*******************************************');
-    console.log('\n\n\n');
-
-    let result = JSON.stringify(valueParser(str)[0], null, 2)
-    console.log('\nFINAL RESULT :\n', result);
-});
-
-function valueParser(input){
-    return arrayParser(input)||
-            objectParser(input)||
-            boolParser(input)||
-            stringParser(input)||
-            numberParser(input)||
+function valueParser (input) {
+  return arrayParser(input) ||
+            objectParser(input) ||
+            boolParser(input) ||
+            stringParser(input) ||
+            numberParser(input) ||
             nullParser(input)
 }
 
-function nullParser(input) {
-    if (input.substring(0,4) != 'null') {
-        return null
-    }
-
-    return [null, input.substring(4)]
+function nullParser (input) {
+  if (input.slice(0, 4) !== 'null') {
+    return null
+  }
+  return [null, input.slice(4)]
 }
 
-function whiteSpaceParser(input) {
-    let regex = /^\s+/
-    let match = input.match(regex)
-    if (!match) {
-        return null
-    }
-
-    return [match[0], input.replace(regex,'')]
+function boolParser (input) {
+  let regex = /^(true|false)/
+  let match = input.match(regex)
+  if (!match) {
+    return null
+  }
+  let bool = match[0] === 'true'
+  return [bool, input.slice(match[0].length)]
 }
 
-function boolParser(input) {
-    let regex = /^(true|false)/
-    let match = input.match(regex)
-    if (!match) {
-        return null
-    }
-
-    let bool = match[0] == 'true' ? true : false
-
-    return [bool, input.slice(match[0].length)]
+function stringParser (input) {
+  let regex = /^"([^"\\]|\\"|\\n)*"/
+  let match = input.match(regex)
+  if (!match) {
+    return null
+  }
+  let strg = match[0].slice(1, -1)
+  return [strg, input.slice(match[0].length)]
 }
 
-function stringParser(input) {
-    let regex = /^"([^"\\]|\\"|\\n)*"/
-    let match = input.match(regex)
-    if (!match) {
-        return null
-    }
-
-    let strg = match[0].slice(1,-1)
-
-    return [strg, input.slice(match[0].length)]
+function numberParser (input) {
+  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
+  let match = input.match(regex)
+  if (!match) {
+    return null
+  }
+  let num = Number(match[0])
+  return [num, input.slice(match[0].length)]
 }
 
-
-function numberParser(input) {
-    let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
-    let match = input.match(regex)
-    if (!match) {
-        return null
+function arrayParser (arrayString) {
+  if (!arrayString.startsWith('[')) {
+    return null
+  }
+  let arr = []
+  arrayString = arrayString.slice(1)
+  while (true) {
+    if (whiteSpaceParser(arrayString)) {
+      arrayString = whiteSpaceParser(arrayString)[1]
     }
-    
-    let num = Number(match[0])
-
-    return [num, input.slice(match[0].length)]
+    if (valueParser(arrayString)) {
+      arr.push(valueParser(arrayString)[0])
+      arrayString = valueParser(arrayString)[1]
+    } else if (!arrayString.startsWith(']')) {
+      throw Error('Invalid JSON : Excepted "]"')
+    }
+    if (whiteSpaceParser(arrayString)) {
+      arrayString = whiteSpaceParser(arrayString)[1]
+    }
+    if (arrayString.startsWith(',')) {
+      arrayString = arrayString.slice(1)
+      continue
+    } else if (arrayString.startsWith(']')) {
+      arrayString = arrayString.slice(1)
+      break
+    } else {
+      throw Error('Invalid JSON : Excepted "]"')
+    }
+  }
+  return [arr, arrayString]
 }
 
-function commaParser(input){
-    let regex = /^,/
-    let match = input.match(regex)
-    if (!match) {
-        return null
+function objectParser (objectString) {
+  if (!objectString.startsWith('{')) {
+    return null
+  }
+  let obj = {}
+  objectString = objectString.slice(1)
+  while (true) {
+    if (whiteSpaceParser(objectString)) {
+      objectString = whiteSpaceParser(objectString)[1]
     }
-    
-    return [match[0], input.slice(match[0].length)]
+    if (!objectString.startsWith('"')) {
+      throw Error('Invalid JSON : Expected string as key')
+    }
+    let key = stringParser(objectString)[0]
+    objectString = stringParser(objectString)[1]
+    if (whiteSpaceParser(objectString)) {
+      objectString = whiteSpaceParser(objectString)[1]
+    }
+    if (!objectString.startsWith(':')) {
+      throw Error('Invalid JSON : Expected ":"')
+    }
+    objectString = objectString.slice(1)
+    if (whiteSpaceParser(objectString)) {
+      objectString = whiteSpaceParser(objectString)[1]
+    }
+    let value = ''
+    if (valueParser(objectString)) {
+      value = valueParser(objectString)[0]
+      objectString = valueParser(objectString)[1]
+    } else {
+      throw Error('Invalid JSON : Invalid value')
+    }
+    obj[key] = value
+    if (whiteSpaceParser(objectString)) {
+      objectString = whiteSpaceParser(objectString)[1]
+    }
+    if (objectString.startsWith(',')) {
+      objectString = objectString.slice(1)
+      continue
+    } else if (objectString.startsWith('}')) {
+      objectString = objectString.slice(1)
+      break
+    } else {
+      throw Error('Invalid JSON : Excepted "}"')
+    }
+  }
+  return [obj, objectString]
 }
 
-function arrayParser(isArray){
-    if(!openSquareParser(isArray)){
-        return null
-    }
-
-    function openSquareParser(input){
-        let openSquare = /^\[/
-        let match = input.match(openSquare)
-        if (!match) {
-            return null
-        }
-        
-        return [match[0], input.slice(match[0].length)]
-    }
-    
-    function closeSquareParser(input){
-        let closeSquare = /^\]/
-        let match = input.match(closeSquare)
-        if (!closeSquare.test(input)) {
-            return null
-        }
-        
-        return [match[0], input.slice(match[0].length)]
-    }
-
-    let arr = []
-    isArray = openSquareParser(isArray)[1]
-
-    while(!closeSquareParser(isArray)){
-
-        if(whiteSpaceParser(isArray)){
-            isArray = whiteSpaceParser(isArray)[1]
-        }
-
-        if(valueParser(isArray)){
-            arr.push(valueParser(isArray)[0])
-            isArray = valueParser(isArray)[1]
-        }
-
-        if(whiteSpaceParser(isArray)){
-            isArray = whiteSpaceParser(isArray)[1]
-        }
-
-        if(commaParser(isArray)){
-            isArray = commaParser(isArray)[1]
-        }
-        
-        if(whiteSpaceParser(isArray)){
-            isArray = whiteSpaceParser(isArray)[1]
-        }
-    }
-
-    isArray = closeSquareParser(isArray)[1]
-
-    return [arr,isArray]
-}
-
-function objectParser(isObject){
-    if (!openCurlyParser(isObject)) {
-        return null
-    }
-
-    function openCurlyParser(input){
-        let openSquare = /^\{/
-        let match = input.match(openSquare)
-        if (!match) {
-            return null
-        }
-        
-        return [match[0], input.slice(match[0].length)]
-    }
-    
-    function closeCurlyParser(input){
-        let closeSquare = /^\}/
-        let match = input.match(closeSquare)
-        if (!closeSquare.test(input)) {
-            return null
-        }
-        
-        return [match[0], input.slice(match[0].length)]
-    }
-
-    function colenParser(input){
-        let colen = /^:/
-        let match = input.match(colen)
-        if (!match) {
-            return null
-        }
-        
-        return [match[0], input.slice(match[0].length)]
-    }
-    
-    let obj = {}
-    isObject = openCurlyParser(isObject)[1]
-
-    while(!closeCurlyParser(isObject)){
-
-        if(whiteSpaceParser(isObject)){
-            isObject = whiteSpaceParser(isObject)[1]
-        }
-        
-        let key = stringParser(isObject)[0]
-        isObject = stringParser(isObject)[1]
-
-        if(whiteSpaceParser(isObject)){
-            isObject = whiteSpaceParser(isObject)[1]
-        }
-
-        isObject = colenParser(isObject)[1]
-
-        if(whiteSpaceParser(isObject)){
-            isObject = whiteSpaceParser(isObject)[1]
-        }
-
-        let value = ''
-        if(valueParser(isObject)){
-            value = valueParser(isObject)[0]
-            isObject = valueParser(isObject)[1]
-        }
-
-        obj[key] = value
-
-        if(whiteSpaceParser(isObject)){
-            isObject = whiteSpaceParser(isObject)[1]
-        }
-
-        if(commaParser(isObject)){
-            isObject = commaParser(isObject)[1]
-        }
-
-        if(whiteSpaceParser(isObject)){
-            isObject = whiteSpaceParser(isObject)[1]
-        }
-    }
-
-    if(closeCurlyParser(isObject)){
-        isObject = closeCurlyParser(isObject)[1]
-    }
-
-    return [obj,isObject]
+function whiteSpaceParser (input) {
+  let regex = /^\s+/
+  let match = input.match(regex)
+  if (!match) {
+    return null
+  }
+  return [match[0], input.replace(regex, '')]
 }
