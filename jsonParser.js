@@ -13,6 +13,9 @@ fs.readFile(file, 'utf-8', (error, str) => {
 })
 
 function valueParser (input) {
+  if (whiteSpaceParser(input)) {
+    input = whiteSpaceParser(input)[1]
+  }
   return arrayParser(input) ||
             objectParser(input) ||
             boolParser(input) ||
@@ -95,13 +98,19 @@ function objectParser (objectString) {
     return null
   }
   let obj = {}
+  let expectingNextPair = false
   objectString = objectString.slice(1)
   while (true) {
     if (whiteSpaceParser(objectString)) {
       objectString = whiteSpaceParser(objectString)[1]
     }
-    if (!objectString.startsWith('"')) {
-      throw Error('Invalid JSON : Expected string as key')
+    if (objectString.startsWith('}') && !expectingNextPair) {
+      objectString = objectString.slice(1)
+      break
+    } else if (!expectingNextPair && !stringParser(objectString)) {
+      throw Error('Invalid JSON')
+    } else if (expectingNextPair && !stringParser(objectString)) {
+      throw Error('Invalid JSON : Expecting next key value pair')
     }
     let key = stringParser(objectString)[0]
     objectString = stringParser(objectString)[1]
@@ -123,17 +132,19 @@ function objectParser (objectString) {
       throw Error('Invalid JSON : Invalid value')
     }
     obj[key] = value
+    expectingNextPair = false
     if (whiteSpaceParser(objectString)) {
       objectString = whiteSpaceParser(objectString)[1]
     }
     if (objectString.startsWith(',')) {
       objectString = objectString.slice(1)
+      expectingNextPair = true
       continue
     } else if (objectString.startsWith('}')) {
       objectString = objectString.slice(1)
       break
     } else {
-      throw Error('Invalid JSON : Excepted "}"')
+      throw Error('Invalid JSON')
     }
   }
   return [obj, objectString]
