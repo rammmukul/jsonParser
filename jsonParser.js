@@ -57,7 +57,7 @@ function stringParser (input) {
 }
 
 function numberParser (input) {
-  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?\s+/
+  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
   let match = input.match(regex)
   if (!match) {
     return null
