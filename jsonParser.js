@@ -8,7 +8,12 @@ fs.readFile(file, 'utf-8', (error, str) => {
   console.log('\n\n\n')
   console.log('*******************************************')
   console.log('\n\n\n')
-  let result = JSON.stringify(valueParser(str)[0], null, 2)
+  let result
+  try {
+    result = JSON.stringify(valueParser(str)[0], null, 2)
+  } catch (e) {
+    throw Error('Invalid JSON')
+  }
   console.log('\nFINAL RESULT :\n', result)
 })
 
@@ -52,7 +57,7 @@ function stringParser (input) {
 }
 
 function numberParser (input) {
-  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
+  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?\s+/
   let match = input.match(regex)
   if (!match) {
     return null
