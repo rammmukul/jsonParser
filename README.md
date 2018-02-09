@@ -1,2 +1,2 @@
 usage : 
-  `node jsonParser <file to parse>`
+  `node jsonReader.js <file to parse>`
