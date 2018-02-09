@@ -1,21 +1,4 @@
-let fs = require('fs')
-let file = `${process.argv[2]}`
-fs.readFile(file, 'utf-8', (error, str) => {
-  if (error) {
-    throw error
-  }
-  console.log('String:\n', str)
-  console.log('\n\n\n')
-  console.log('*******************************************')
-  console.log('\n\n\n')
-  let result
-  try {
-    result = JSON.stringify(valueParser(str)[0], null, 2)
-  } catch (e) {
-    throw Error('Invalid JSON')
-  }
-  console.log('\nFINAL RESULT :\n', result)
-})
+exports.parseJSON = valueParser
 
 function valueParser (input) {
   if (whiteSpaceParser(input)) {
@@ -57,7 +40,7 @@ function stringParser (input) {
 }
 
 function numberParser (input) {
-  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?\s+/
+  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
   let match = input.match(regex)
   if (!match) {
     return null
