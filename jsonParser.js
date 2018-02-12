@@ -2,12 +2,12 @@ exports.parseJSON = valueParser
 
 function valueParser (input) {
   input = consumeWhiteSpace(input)
-  return arrayParser(input) ||
-            objectParser(input) ||
+  return nullParser(input) ||
             boolParser(input) ||
-            stringParser(input) ||
             numberParser(input) ||
-            nullParser(input)
+            stringParser(input) ||
+            arrayParser(input) ||
+            objectParser(input)
 }
 
 function nullParser (input) {
@@ -18,7 +18,7 @@ function nullParser (input) {
 }
 
 function boolParser (input) {
-  let regex = /^(true|false)/
+  let regex = /^(?:true|false)/
   let match = input.match(regex)
   if (!match) {
     return null
@@ -33,9 +33,6 @@ function stringParser (input) {
   if (!match) {
     return null
   }
-  function unicode (match, p1) {
-    return String.fromCharCode(parseInt(p1, 16))
-  }
   let strg = match[0].slice(1, -1)
   strg = strg.replace(/\\\\/g, '\\')
   strg = strg.replace(/\\\//g, '/')
@@ -49,7 +46,7 @@ function stringParser (input) {
 }
 
 function numberParser (input) {
-  let regex = /^(-)?(0|\d+)(\.\d+)?((e|E)(\+|-)?\d+)?/
+  let regex = /^(?:-)?(?:0|\d+)(?:\.\d+)?(?:(?:e|E)(?:\+|-)?\d+)?/
   let match = input.match(regex)
   if (!match) {
     return null
@@ -70,9 +67,10 @@ function arrayParser (arrayString) {
   let expectingNextElement = false
   while (true) {
     arrayString = consumeWhiteSpace(arrayString)
-    if (valueParser(arrayString)) {
-      arr.push(valueParser(arrayString)[0])
-      arrayString = valueParser(arrayString)[1]
+    let result = valueParser(arrayString)
+    if (result) {
+      arr.push(result[0])
+      arrayString = result[1]
       expectingNextElement = false
     } else if (!arrayString.startsWith(']')) {
       throw Error('Invalid JSON : Excepted "]"')
@@ -101,16 +99,17 @@ function objectParser (objectString) {
   objectString = objectString.slice(1)
   while (true) {
     objectString = consumeWhiteSpace(objectString)
+    let parsedStr = stringParser(objectString)
     if (objectString.startsWith('}') && !expectingNextPair) {
       objectString = objectString.slice(1)
       break
-    } else if (!expectingNextPair && !stringParser(objectString)) {
+    } else if (!expectingNextPair && !parsedStr) {
       throw Error('Invalid JSON')
-    } else if (expectingNextPair && !stringParser(objectString)) {
+    } else if (expectingNextPair && !parsedStr) {
       throw Error('Invalid JSON : Expecting next key value pair')
     }
-    let key = stringParser(objectString)[0]
-    objectString = stringParser(objectString)[1]
+    let key = parsedStr[0]
+    objectString = parsedStr[1]
     objectString = consumeWhiteSpace(objectString)
     if (!objectString.startsWith(':')) {
       throw Error('Invalid JSON : Expected ":"')
@@ -118,9 +117,10 @@ function objectParser (objectString) {
     objectString = objectString.slice(1)
     objectString = consumeWhiteSpace(objectString)
     let value = ''
-    if (valueParser(objectString)) {
-      value = valueParser(objectString)[0]
-      objectString = valueParser(objectString)[1]
+    let parsedValue = valueParser(objectString)
+    if (parsedValue) {
+      value = parsedValue[0]
+      objectString = parsedValue[1]
     } else {
       throw Error('Invalid JSON : Invalid value')
     }
@@ -151,8 +151,13 @@ function whiteSpaceParser (input) {
 }
 
 function consumeWhiteSpace (input) {
-  if (whiteSpaceParser(input)) {
-    input = whiteSpaceParser(input)[1]
+  let result = whiteSpaceParser(input)
+  if (result) {
+    input = result[1]
   }
   return input
+}
+
+function unicode (match, p1) {
+  return String.fromCharCode(parseInt(p1, 16))
 }
