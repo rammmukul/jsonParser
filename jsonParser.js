@@ -1,9 +1,7 @@
 exports.parseJSON = valueParser
 
 function valueParser (input) {
-  if (whiteSpaceParser(input)) {
-    input = whiteSpaceParser(input)[1]
-  }
+  input = consumeWhiteSpace(input)
   return arrayParser(input) ||
             objectParser(input) ||
             boolParser(input) ||
@@ -69,27 +67,26 @@ function arrayParser (arrayString) {
   }
   let arr = []
   arrayString = arrayString.slice(1)
+  let expectingNextElement = false
   while (true) {
-    if (whiteSpaceParser(arrayString)) {
-      arrayString = whiteSpaceParser(arrayString)[1]
-    }
+    arrayString = consumeWhiteSpace(arrayString)
     if (valueParser(arrayString)) {
       arr.push(valueParser(arrayString)[0])
       arrayString = valueParser(arrayString)[1]
+      expectingNextElement = false
     } else if (!arrayString.startsWith(']')) {
       throw Error('Invalid JSON : Excepted "]"')
     }
-    if (whiteSpaceParser(arrayString)) {
-      arrayString = whiteSpaceParser(arrayString)[1]
-    }
+    arrayString = consumeWhiteSpace(arrayString)
     if (arrayString.startsWith(',')) {
       arrayString = arrayString.slice(1)
+      expectingNextElement = true
       continue
-    } else if (arrayString.startsWith(']')) {
+    } else if (arrayString.startsWith(']') && !expectingNextElement) {
       arrayString = arrayString.slice(1)
       break
     } else {
-      throw Error('Invalid JSON : Excepted "]"')
+      throw Error('Invalid JSON')
     }
   }
   return [arr, arrayString]
@@ -103,9 +100,7 @@ function objectParser (objectString) {
   let expectingNextPair = false
   objectString = objectString.slice(1)
   while (true) {
-    if (whiteSpaceParser(objectString)) {
-      objectString = whiteSpaceParser(objectString)[1]
-    }
+    objectString = consumeWhiteSpace(objectString)
     if (objectString.startsWith('}') && !expectingNextPair) {
       objectString = objectString.slice(1)
       break
@@ -116,16 +111,12 @@ function objectParser (objectString) {
     }
     let key = stringParser(objectString)[0]
     objectString = stringParser(objectString)[1]
-    if (whiteSpaceParser(objectString)) {
-      objectString = whiteSpaceParser(objectString)[1]
-    }
+    objectString = consumeWhiteSpace(objectString)
     if (!objectString.startsWith(':')) {
       throw Error('Invalid JSON : Expected ":"')
     }
     objectString = objectString.slice(1)
-    if (whiteSpaceParser(objectString)) {
-      objectString = whiteSpaceParser(objectString)[1]
-    }
+    objectString = consumeWhiteSpace(objectString)
     let value = ''
     if (valueParser(objectString)) {
       value = valueParser(objectString)[0]
@@ -135,9 +126,7 @@ function objectParser (objectString) {
     }
     obj[key] = value
     expectingNextPair = false
-    if (whiteSpaceParser(objectString)) {
-      objectString = whiteSpaceParser(objectString)[1]
-    }
+    objectString = consumeWhiteSpace(objectString)
     if (objectString.startsWith(',')) {
       objectString = objectString.slice(1)
       expectingNextPair = true
@@ -159,4 +148,11 @@ function whiteSpaceParser (input) {
     return null
   }
   return [match[0], input.replace(regex, '')]
+}
+
+function consumeWhiteSpace (input) {
+  if (whiteSpaceParser(input)) {
+    input = whiteSpaceParser(input)[1]
+  }
+  return input
 }
