@@ -30,12 +30,23 @@ function boolParser (input) {
 }
 
 function stringParser (input) {
-  let regex = /^"([^"\\]|\\"|\\n)*"/
+  let regex = /^"(?:\\"|.)*?"/
   let match = input.match(regex)
   if (!match) {
     return null
   }
+  function unicode (match, p1) {
+    return String.fromCharCode(parseInt(p1, 16))
+  }
   let strg = match[0].slice(1, -1)
+  strg = strg.replace(/\\\\/g, '\\')
+  strg = strg.replace(/\\\//g, '/')
+  strg = strg.replace(/\\b/g, '\b')
+  strg = strg.replace(/\\f/g, '\f')
+  strg = strg.replace(/\\n/g, '\n')
+  strg = strg.replace(/\\r/g, '\r')
+  strg = strg.replace(/\\t/g, '\t')
+  strg = strg.replace(/\\u([\dABCDEFabcdef]{4})/gu, unicode)
   return [strg, input.slice(match[0].length)]
 }
 
@@ -46,6 +57,9 @@ function numberParser (input) {
     return null
   }
   let num = Number(match[0])
+  if (-Infinity === num || num === Infinity) {
+    throw Error('Invalid JSON : Number out of range')
+  }
   return [num, input.slice(match[0].length)]
 }
 

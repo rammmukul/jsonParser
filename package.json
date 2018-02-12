@@ -1,0 +1,29 @@
+{
+  "name": "json_parser",
+  "version": "1.0.0",
+  "description": "json parser in js",
+  "main": "jsonParser.js",
+  "dependencies": {
+    "jest": "^22.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "jest",
+    "watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rammmukul/jsonParser.git"
+  },
+  "keywords": [
+    "parser",
+    "json",
+    "js"
+  ],
+  "author": "Mukul Mahajan Singraur",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rammmukul/jsonParser/issues"
+  },
+  "homepage": "https://github.com/rammmukul/jsonParser#readme"
+}
